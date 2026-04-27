@@ -12,7 +12,7 @@ Aprendizado : melhor entendimento sobre manipulação de strings
 
 int main() {
     int n, p;
-    char w[55];
+    char w[51];
     scanf("%d", &n);
     
     while (n > 0) {
