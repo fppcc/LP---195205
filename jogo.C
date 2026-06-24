@@ -11,108 +11,109 @@ Aprendizado : Manipulação de matrizes, loops de controle de jogo interativo
 -------------------------------------------------------------------------- */
 
 #include <stdio.h>
+#include <stdlib.h>
 
-int main() {
-    int v[9][9] = {
-        {1, 3, 2, 5, 7, 9, 4, 6, 8},
-        {4, 0, 8, 2, 6, 1, 3, 7, 5},
-        {7, 5, 6, 3, 8, 4, 2, 1, 9},
-        {6, 4, 3, 0, 5, 8, 7, 9, 2},
-        {5, 2, 1, 7, 9, 3, 8, 4, 6},
-        {9, 8, 7, 4, 2, 6, 5, 3, 0},
-        {2, 1, 4, 9, 3, 5, 6, 8, 7},
-        {3, 6, 5, 8, 1, 7, 9, 2, 4},
-        {8, 7, 0, 6, 4, 2, 0, 5, 3}
-    };
+#define TAM 9
 
-    while (1) {
-        int zeros = 0;
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                if (v[i][j] == 0) {
-                    zeros++;
-                }
-            }
+void imprimirTabeleiro(int matriz[TAM][TAM]) {
+    printf("\n    0 1 2   3 4 5   6 7 8\n");
+    printf("  -------------------------\n");
+    for (int i = 0; i < TAM; i++) {
+        if (i > 0 && i % 3 == 0) {
+            printf("  ------+-------+------\n");
         }
-
-        printf("\n    0 1 2   3 4 5   6 7 8\n");
-        printf("  +-------+-------+-------+\n");
-        for (int i = 0; i < 9; i++) {
-            printf("%d | ", i);
-            for (int j = 0; j < 9; j++) {
-                if (v[i][j] == 0) {
-                    printf(". ");
-                } else {
-                    printf("%d ", v[i][j]);
-                }
-                if ((j + 1) % 3 == 0) {
-                    printf("| ");
-                }
+        printf("%d | ", i);
+        for (int j = 0; j < TAM; j++) {
+            if (j > 0 && j % 3 == 0) {
+                printf("| ");
             }
-            printf("\n");
-            if ((i + 1) % 3 == 0) {
-                printf("  +-------+-------+-------+\n");
-            }
-        }
-
-        if (zeros == 0) {
-            int cont = 0;
-
-            for (int i = 0; i < 9; i++) {
-                int c[10] = {0};
-                for (int j = 0; j < 9; j++) {
-                    int val = v[i][j];
-                    if (c[val] == 1) cont++;
-                    else c[val] = 1;
-                }
-            }
-
-            for (int j = 0; j < 9; j++) {
-                int c[10] = {0};
-                for (int i = 0; i < 9; i++) {
-                    int val = v[i][j];
-                    if (c[val] == 1) cont++;
-                    else c[val] = 1;
-                }
-            }
-
-            for (int i = 0; i < 9; i += 3) {
-                for (int j = 0; j < 9; j += 3) {
-                    int c[10] = {0};
-                    for (int x = 0; x < 3; x++) {
-                        for (int y = 0; y < 3; y++) {
-                            int val = v[i + x][j + y];
-                            if (c[val] == 1) cont++;
-                            else c[val] = 1;
-                        }
-                    }
-                }
-            }
-
-            if (cont == 0) {
-                printf("\nSUDOKU CORRETO\n");
+            if (matriz[i][j] == 0) {
+                printf(". ");
             } else {
-                printf("\nSUDOKU INCORRETO\n");
+                printf("%d ", matriz[i][j]);
             }
-            break;
         }
+        printf("|\n");
+    }
+    printf("  -------------------------\n");
+}
 
-        int l, c, n;
-        printf("\nDigite: Linha Coluna Numero (ex: 1 1 9): ");
-        if (scanf("%d %d %d", &l, &c, &n) != 3) {
-            break;
+int verificarFim(int matriz[TAM][TAM]) {
+    for (int i = 0; i < TAM; i++) {
+        for (int j = 0; j < TAM; j++) {
+            if (matriz[i][j] == 0) return 0;
         }
-
-        if (l >= 0 && l < 9 && c >= 0 && c < 9 && n >= 1 && n <= 9) {
-            if (v[l][c] == 0) {
-                v[l][c] = n;
-            } else {
-                printf("\nEssa posicao ja tem numero fixo!\n");
-            }
-        } else {
-            printf("\nCoordenadas ou numero invalidos!\n");
+    }
+    
+    for (int i = 0; i < TAM; i++) {
+        int linha[10] = {0};
+        int coluna[10] = {0};
+        for (int j = 0; j < TAM; j++) {
+            int valL = matriz[i][j];
+            int valC = matriz[j][i];
+            if (linha[valL] == 1 || coluna[valC] == 1) return 0;
+            linha[valL] = 1;
+            coluna[valC] = 1;
         }
     }
 
-    return 0;
+    for (int lin = 0; lin < TAM; lin += 3) {
+        for (int col = 0; col < TAM; col += 3) {
+            int bloco[10] = {0};
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    int val = matriz[lin + i][col + j];
+                    if (bloco[val] == 1) return 0;
+                    bloco[val] = 1;
+                }
+            }
+        }
+    }
+    return 1;
 }
+
+int main() {
+    int tabuleiro[TAM][TAM];
+    int original[TAM][TAM];
+    
+    FILE *arquivo = fopen("input2.txt", "r");
+    
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo input2.txt!\n");
+        return 1;
+    }
+
+    for (int i = 0; i < TAM; i++) {
+        for (int j = 0; j < TAM; j++) {
+            if (fscanf(arquivo, "%d", &tabuleiro[i][j]) != 1) {
+                printf("Erro ao ler os dados do arquivo.\n");
+                fclose(arquivo);
+                return 1;
+            }
+            if (tabuleiro[i][j] != 0) {
+                original[i][j] = 1; 
+            } else {
+                original[i][j] = 0;
+            }
+        }
+    }
+    fclose(arquivo);
+
+    int l, c, valor;
+    
+    while (1) {
+        imprimirTabeleiro(tabuleiro);
+        
+        int preenchido = 1;
+        for (int i = 0; i < TAM; i++) {
+            for (int j = 0; j < TAM; j++) {
+                if (tabuleiro[i][j] == 0) preenchido = 0;
+            }
+        }
+        
+        if (preenchido) {
+            if (verificarFim(tabuleiro)) {
+                printf("\nParabens! Voce resolveu o Sudoku corretamente!\n");
+                break;
+            } else {
+                printf("\nO tabuleiro esta cheio, mas existem erros na sol
