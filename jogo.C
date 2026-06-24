@@ -10,12 +10,14 @@ Aprendizado : Manipulação de matrizes, loops de controle de jogo interativo
                e validação de submatrizes 3x3.
 -------------------------------------------------------------------------- */
 
+
 #include <stdio.h>
 #include <stdlib.h>
 
 #define TAM 9
 
-void imprimirTabeleiro(int matriz[TAM][TAM]) {
+// Função para desenhar o tabuleiro perfeitamente alinhado
+void mostrarTabuleiro(int m[TAM][TAM]) {
     printf("\n    0 1 2   3 4 5   6 7 8\n");
     printf("  -------------------------\n");
     for (int i = 0; i < TAM; i++) {
@@ -27,10 +29,10 @@ void imprimirTabeleiro(int matriz[TAM][TAM]) {
             if (j > 0 && j % 3 == 0) {
                 printf("| ");
             }
-            if (matriz[i][j] == 0) {
-                printf(". ");
+            if (m[i][j] == 0) {
+                printf(". "); // Exibe ponto onde for zero (espaço para preencher)
             } else {
-                printf("%d ", matriz[i][j]);
+                printf("%d ", m[i][j]);
             }
         }
         printf("|\n");
@@ -38,33 +40,38 @@ void imprimirTabeleiro(int matriz[TAM][TAM]) {
     printf("  -------------------------\n");
 }
 
-int verificarFim(int matriz[TAM][TAM]) {
+// Função que analisa se o Sudoku foi preenchido corretamente e sem erros
+int validarSolucao(int m[TAM][TAM]) {
+    // 1. Verifica se ainda existe alguma casa vazia
     for (int i = 0; i < TAM; i++) {
         for (int j = 0; j < TAM; j++) {
-            if (matriz[i][j] == 0) return 0;
+            if (m[i][j] == 0) return 0;
         }
     }
-    
+
+    // 2. Verifica linhas e colunas por duplicatas
     for (int i = 0; i < TAM; i++) {
         int linha[10] = {0};
         int coluna[10] = {0};
         for (int j = 0; j < TAM; j++) {
-            int valL = matriz[i][j];
-            int valC = matriz[j][i];
-            if (linha[valL] == 1 || coluna[valC] == 1) return 0;
-            linha[valL] = 1;
-            coluna[valC] = 1;
+            int vl = m[i][j];
+            int vc = m[j][i];
+            
+            if (linha[vl] || coluna[vc]) return 0;
+            linha[vl] = 1;
+            coluna[vc] = 1;
         }
     }
 
-    for (int lin = 0; lin < TAM; lin += 3) {
-        for (int col = 0; col < TAM; col += 3) {
+    // 3. Verifica cada um dos blocos 3x3
+    for (int L = 0; L < TAM; L += 3) {
+        for (int C = 0; C < TAM; C += 3) {
             int bloco[10] = {0};
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
-                    int val = matriz[lin + i][col + j];
-                    if (bloco[val] == 1) return 0;
-                    bloco[val] = 1;
+                    int v = m[L + i][C + j];
+                    if (bloco[v]) return 0;
+                    bloco[v] = 1;
                 }
             }
         }
@@ -73,47 +80,88 @@ int verificarFim(int matriz[TAM][TAM]) {
 }
 
 int main() {
-    int tabuleiro[TAM][TAM];
-    int original[TAM][TAM];
-    
-    FILE *arquivo = fopen("input2.txt", "r");
-    
-    if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo input2.txt!\n");
+    int mat[TAM][TAM] = {0};
+    int fixo[TAM][TAM] = {0};
+
+    FILE *f = fopen("input2.txt", "r");
+    if (f == NULL) {
+        printf("Erro crítico: Não foi possível abrir o arquivo input2.txt!\n");
+        printf("Verifique se o arquivo está na mesma pasta do programa.\n");
         return 1;
     }
 
-    for (int i = 0; i < TAM; i++) {
-        for (int j = 0; j < TAM; j++) {
-            if (fscanf(arquivo, "%d", &tabuleiro[i][j]) != 1) {
-                printf("Erro ao ler os dados do arquivo.\n");
-                fclose(arquivo);
-                return 1;
+    // Motor de leitura blindado contra caracteres ocultos (BOM/Windows/Linux)
+    int total_lidos = 0;
+    while (total_lidos < 81) {
+        int num;
+        if (fscanf(f, "%d", &num) == 1) {
+            int i = total_lidos / TAM;
+            int j = total_lidos % TAM;
+            
+            mat[i][j] = num;
+            if (num != 0) {
+                fixo[i][j] = 1; // Trava os números iniciais do professor
             }
-            if (tabuleiro[i][j] != 0) {
-                original[i][j] = 1; 
-            } else {
-                original[i][j] = 0;
+            total_lidos++;
+        } else {
+            // Se achar um caractere estranho/invisível, descarta ele e avança
+            if (fgetc(f) == EOF) {
+                break;
             }
         }
     }
-    fclose(arquivo);
+    fclose(f);
 
-    int l, c, valor;
-    
+    int lin, col, val;
+
     while (1) {
-        imprimirTabeleiro(tabuleiro);
-        
-        int preenchido = 1;
-        for (int i = 0; i < TAM; i++) {
-            for (int j = 0; j < TAM; j++) {
-                if (tabuleiro[i][j] == 0) preenchido = 0;
+        mostrarTabuleiro(mat);
+
+        // Checa se o usuário terminou de preencher tudo
+        int cheio = 1;
+        for (int r = 0; r < TAM; r++) {
+            for (int o = 0; o < TAM; o++) {
+                if (mat[r][o] == 0) cheio = 0;
             }
         }
-        
-        if (preenchido) {
-            if (verificarFim(tabuleiro)) {
-                printf("\nParabens! Voce resolveu o Sudoku corretamente!\n");
+
+        if (cheio) {
+            if (validarSolucao(mat)) {
+                printf("\n=============================================\n");
+                printf("  PARABÉNS! Você resolveu o Sudoku com sucesso!");
+                printf("\n=============================================\n");
                 break;
             } else {
-                printf("\nO tabuleiro esta cheio, mas existem erros na sol
+                printf("\n[AVISO] O tabuleiro está cheio, mas há erros na solução. Corrija-os!\n");
+            }
+        }
+
+        // Interface interativa
+        printf("\nDigite: Linha Coluna Valor (Ex: 1 1 2) ou '-1 -1 -1' para sair: ");
+        if (scanf("%d %d %d", &lin, &col, &val) != 3) {
+            printf("\nEntrada inválida! Digite apenas números.\n");
+            while (getchar() != '\n'); // Limpa o buffer do teclado
+            continue;
+        }
+
+        if (lin == -1 && col == -1 && val == -1) {
+            printf("\nJogo encerrado. Até a próxima!\n");
+            break;
+        }
+
+        // Validações de limites
+        if (lin < 0 || lin >= TAM || col < 0 || col >= TAM || val < 1 || val > 9) {
+            printf("\nValores incorretos! Coordenadas de 0 a 8 e Valores de 1 a 9.\n");
+            continue;
+        }
+
+        // Impede alterar os números originais que vieram do arquivo
+        if (fixo[lin][col]) {
+            printf("\nErro: Você não pode alterar uma posição inicial definida pelo professor!\n");
+        } else {
+            mat[lin][col] = val;
+        }
+    }
+
+    return 0;
+}
