@@ -11,12 +11,15 @@ Aprendizado : Manipulação de matrizes, loops de controle de jogo interativo
 -------------------------------------------------------------------------- */
 
 
+
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 
 #define TAM 9
 
-// Função para desenhar o tabuleiro perfeitamente alinhado
 void mostrarTabuleiro(int m[TAM][TAM]) {
     printf("\n    0 1 2   3 4 5   6 7 8\n");
     printf("  -------------------------\n");
@@ -30,7 +33,7 @@ void mostrarTabuleiro(int m[TAM][TAM]) {
                 printf("| ");
             }
             if (m[i][j] == 0) {
-                printf(". "); // Exibe ponto onde for zero (espaço para preencher)
+                printf(". ");
             } else {
                 printf("%d ", m[i][j]);
             }
@@ -40,16 +43,13 @@ void mostrarTabuleiro(int m[TAM][TAM]) {
     printf("  -------------------------\n");
 }
 
-// Função que analisa se o Sudoku foi preenchido corretamente e sem erros
 int validarSolucao(int m[TAM][TAM]) {
-    // 1. Verifica se ainda existe alguma casa vazia
     for (int i = 0; i < TAM; i++) {
         for (int j = 0; j < TAM; j++) {
             if (m[i][j] == 0) return 0;
         }
     }
 
-    // 2. Verifica linhas e colunas por duplicatas
     for (int i = 0; i < TAM; i++) {
         int linha[10] = {0};
         int coluna[10] = {0};
@@ -63,7 +63,6 @@ int validarSolucao(int m[TAM][TAM]) {
         }
     }
 
-    // 3. Verifica cada um dos blocos 3x3
     for (int L = 0; L < TAM; L += 3) {
         for (int C = 0; C < TAM; C += 3) {
             int bloco[10] = {0};
@@ -71,7 +70,7 @@ int validarSolucao(int m[TAM][TAM]) {
                 for (int j = 0; j < 3; j++) {
                     int v = m[L + i][C + j];
                     if (bloco[v]) return 0;
-                    bloco[v] = 1;
+                    b[v] = 1;
                 }
             }
         }
@@ -86,11 +85,9 @@ int main() {
     FILE *f = fopen("input2.txt", "r");
     if (f == NULL) {
         printf("Erro crítico: Não foi possível abrir o arquivo input2.txt!\n");
-        printf("Verifique se o arquivo está na mesma pasta do programa.\n");
         return 1;
     }
 
-    // Motor de leitura blindado contra caracteres ocultos (BOM/Windows/Linux)
     int total_lidos = 0;
     while (total_lidos < 81) {
         int num;
@@ -100,11 +97,10 @@ int main() {
             
             mat[i][j] = num;
             if (num != 0) {
-                fixo[i][j] = 1; // Trava os números iniciais do professor
+                fixo[i][j] = 1;
             }
             total_lidos++;
         } else {
-            // Se achar um caractere estranho/invisível, descarta ele e avança
             if (fgetc(f) == EOF) {
                 break;
             }
@@ -117,7 +113,6 @@ int main() {
     while (1) {
         mostrarTabuleiro(mat);
 
-        // Checa se o usuário terminou de preencher tudo
         int cheio = 1;
         for (int r = 0; r < TAM; r++) {
             for (int o = 0; o < TAM; o++) {
@@ -136,11 +131,10 @@ int main() {
             }
         }
 
-        // Interface interativa
         printf("\nDigite: Linha Coluna Valor (Ex: 1 1 2) ou '-1 -1 -1' para sair: ");
         if (scanf("%d %d %d", &lin, &col, &val) != 3) {
             printf("\nEntrada inválida! Digite apenas números.\n");
-            while (getchar() != '\n'); // Limpa o buffer do teclado
+            while (getchar() != '\n');
             continue;
         }
 
@@ -149,13 +143,11 @@ int main() {
             break;
         }
 
-        // Validações de limites
         if (lin < 0 || lin >= TAM || col < 0 || col >= TAM || val < 1 || val > 9) {
             printf("\nValores incorretos! Coordenadas de 0 a 8 e Valores de 1 a 9.\n");
             continue;
         }
 
-        // Impede alterar os números originais que vieram do arquivo
         if (fixo[lin][col]) {
             printf("\nErro: Você não pode alterar uma posição inicial definida pelo professor!\n");
         } else {
